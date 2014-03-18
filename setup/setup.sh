@@ -1,7 +1,7 @@
 #!/bin/bash
 #setup emulab ubuntu server as remote desktop server
-sudo apt-get install-y ubuntu-desktop
-sudo apt-get install tightvncserver
+sudo apt-get install -y ubuntu-desktop
+sudo apt-get install -y tightvncserver
 
 sudo apt-get install -y xrdp
 #create .xsession file with the content:x

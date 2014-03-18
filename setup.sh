@@ -17,3 +17,10 @@ cd /mnt/large/cnnfox/lemur/
 sudo /mnt/large/cnnfox/lemur/configure --prefix=/mnt/large/cnnfox/lemur/ --enable-cluster --enable-java
 sudo make
 sudo make install
+
+#sklearn
+sudo apt-get install python-joblib
+sudo apt-get install -y python-sklearn
+#misc
+sudo apt-get install python-mysqldb
+
