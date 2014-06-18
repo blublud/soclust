@@ -13,3 +13,5 @@ for row in cur.fetchall():
 		else:
 			tags[t].append(row[1])
 
+
+	

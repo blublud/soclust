@@ -17,7 +17,6 @@ f_input=''
 f_output=''
 clustCount=0
 
-
 def main():
 
 	parser=argparse.ArgumentParser()

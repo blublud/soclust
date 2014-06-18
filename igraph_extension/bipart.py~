@@ -1,0 +1,135 @@
+from igraph import Graph
+import numpy as np
+import abc
+from sklearn.cluster import Ward
+from scipy.spatial.distance import cdist
+
+import sys; sys.path.append('/proj/DSL/sincere/big-server/_gited/soclust/igraph_extension');
+from centrality import Centrality
+from clustering import Clustering
+
+class BiPart(Centrality,Clustering):
+
+	__metaclass__ = abc.ABCMeta
+	'''
+		This function produces the matrix of common neighbor between set of vertices 
+	'''
+
+	def commonNeighbors(self,vertices):
+		size=len(vertices)
+		cn=np.zeros((size,size))
+		
+		viewers=self.neighborhood([ v.index for v in vertices])
+		for i in range(size):
+			for j in range(i+1,size):
+				conb=len(set(viewers[i]) & set(viewers[j]))
+				if not conb: continue
+				cn[i,j]=float(conb)/len(set(viewers[i]))
+				cn[i,j]=float(conb)/len(set(viewers[j]))
+				#cn[i,j]=len(set(viewers[i]) & set(viewers[j]))
+				
+		return cn
+
+	def commonNeighborsTrimmed(self, vertices, trim_threshold=0.1):
+		size=len(vertices)
+		cn=np.zeros((size,size))
+		
+		viewers=self.neighborhood([ v.index for v in vertices])
+		for i in range(size):
+			for j in range(i+1,size):
+				conb=len(set(viewers[i]) & set(viewers[j]))
+				if not conb: continue
+				ij=float(conb)/len(set(viewers[i]))
+				ji=float(conb)/len(set(viewers[j]))
+				if ij > ji and ij >= trim_threshold:
+					cn[i,j]=ij
+				elif ji > ij and ji >= trim_threshold:
+					cn[j,i]=ji
+				
+		return cn
+		
+	def graph_commonNeighbors(self, vertices,trim_threshold=0.1):
+		
+		data=self.commonNeighborsTrimmed(vertices,trim_threshold)
+		nwEdges=[]
+		for i in range(len(vertices)):
+			for j in range(len(vertices)):
+				if data[i][j] >= trim_threshold:
+					nwEdges.append((vertices[i]['name'],vertices[j]['name'],data[i][j]))
+
+		g=Graph.TupleList(nwEdges,directed=True,weights=True)
+		return g
+
+	@abc.abstractmethod
+	def left(self):
+		'''Return the vertices of the left part'''
+		return
+	@abc.abstractmethod
+	def right(self):
+		'''Return the vertices of the right part'''
+		return
+	@abc.abstractmethod
+	def isLeft(self,v):
+		return
+	@abc.abstractmethod
+	def isRight(self,v):
+		return
+		
+	'''
+		LEFT: users
+		RIGHT: posts
+	'''
+	def doCoClustering(self,leftClustCount,rightClustCount,clustPropName='coclust'):
+		
+		vsleft=self.left()
+		simleft=np.matrix(self.similarity_dice(vsleft))
+		clustleft=Ward(n_clusters=leftClustCount).fit(simleft).labels_
+		
+		vsright=self.right()
+		full2bipart=[(None,-1)]*self.vcount()#tuple of (isOnRightSide,index in left/right list)
+		for i,v in enumerate(vsleft):
+			full2bipart[v.index]=(False,i)
+		for i,v in enumerate(vsright):
+			full2bipart[v.index]=(True,i)
+			
+		sizeright=len(vsright)
+		m_rclust=np.zeros(shape=(sizeright,leftClustCount))			
+		for e in self.es:
+			(srcOnRight,src)=full2bipart[e.source]
+			(_,dst)=full2bipart[e.target]
+			if srcOnRight:
+				vright=src
+				clust=clustleft[dst]				
+			else:
+				vright=dst
+				clust=clustleft[src]
+				
+			m_rclust[vright,clust]+=1
+		
+		clustSizes=[0]*leftClustCount
+		for c in clustleft: 
+			clustSizes[c]+=1
+			
+		for (row,col) in [(row,col) for (row,col),val in np.ndenumerate(m_rclust) if val]:
+			#m_rclust[row,col]=float(val)/clustSizes[col]
+			m_rclust[row,col]=float(val)/vsright[row].degree()
+		
+		simRight=cdist(m_rclust,m_rclust,'cosine')
+		clustright=Ward(n_clusters=rightClustCount).fit(simRight).labels_
+		
+		for i,c in enumerate(clustright):
+			vsright[i][clustPropName]=c
+			
+	'''
+		Print the common neighbor matrix together with some vertex's properties 
+	'''
+'''	
+	def commonNeighborGraph(self,vertices):
+		g=self.induced_subgraph(vertices)
+		cn=commonNeighbors(self,vertices)
+		for i in range(g.vcount()):
+			for j in range(g.vcount()):
+				if cn[i,j]:
+					g.
+					
+'''

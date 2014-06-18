@@ -1,0 +1,7 @@
+#!/usr/bin/python
+
+# Use dev settings if not otherwise configured.
+import os
+THIS_DIR = os.path.dirname(os.path.abspath(__file__))
+import sys
+sys.path.append(THIS_DIR+'/')

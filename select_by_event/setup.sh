@@ -1,11 +1,5 @@
 #!/bin/bash
 
-wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py -O - | sudo python
-wget https://raw.github.com/pypa/pip/master/contrib/get-pip.py -O - | sudo python
-sudo pip install feedparser
-sudo pip install beautifulsoup4
-sudo apt-get install -y python3
-
 #setup lemur
 sudo mkdir -p /mnt/large/cnnfox
 sudo chmod a+rwx /mnt/large/cnnfox
@@ -19,12 +13,8 @@ sudo make
 sudo make install
 
 #sklearn
-sudo apt-get install -y python-joblib
-sudo apt-get install -y python-dev
-sudo easy_install -U scikit-learn
-#sudo apt-get install -y python-sklearn
+sudo apt-get install python-joblib
+sudo apt-get install -y python-sklearn
 #misc
-sudo apt-get install -y python-mysqldb
-sudo apt-get install -y python-tk
-sudo apt-get install -y python-matplotlib
+sudo apt-get install python-mysqldb
 
